@@ -31,7 +31,8 @@ class TObject extends Type{
 
       if(in_array($key,$xKeys)){
         try{
-          $bufferData[$key] = $types->validate($x[$key])->getData();
+          if($types !== null)
+            $bufferData[$key] = $types->validate($x[$key])->getData();
         }catch( \Exception $e ){
           throw new TypeException( $e->getMessage() . TypeException::TRACE_SEPARATOR . $key);
         }
