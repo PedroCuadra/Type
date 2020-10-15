@@ -8,8 +8,7 @@ class TFloat extends TNumeric{
   }
 
   function validate($x){
-    $x = (float) parent::validate($x)->getData();
-    parent::inRange($x);
+    $this->validatedData = (float) parent::validate($x)->getData();
     return $this;
   }
 }

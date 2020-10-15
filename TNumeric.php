@@ -11,7 +11,7 @@ abstract class TNumeric extends Type{
 
   function validate($x){
     if(is_numeric($x)){
-      $this->validatedData = $x;
+      $this->inRange($x);
       return $this;
     }
     throw new TypeException($this->noNumericErrorMessage);
@@ -22,6 +22,7 @@ abstract class TNumeric extends Type{
     $callable = is_callable($range);
     if(!$callable or ( $callable and $range($x))){
       $this->validatedData = $x;
+      return $this;
     }else{
       throw new TypeException($this->noRangeErrorMessage);
     }

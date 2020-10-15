@@ -8,8 +8,7 @@ class TInt extends TNumeric{
   }
 
   function validate($x){
-    $x = (int) parent::validate($x)->getData();
-    parent::inRange($x);
+    $this->validatedData = (int) parent::validate($x)->getData();
     return $this;
   }
 }
