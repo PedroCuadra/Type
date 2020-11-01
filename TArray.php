@@ -42,4 +42,8 @@ class TArray extends Type{
     $this->validatedData = &$xx;
     return $this;
   }
+
+  function getTypes(){
+    return $this->types;
+  }
 }

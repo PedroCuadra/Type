@@ -19,7 +19,7 @@ class TObject extends Type{
 
   function validate($x){
     // Definición de atributos
-    if( !$x or (!self::isAssoc($x) or !is_array($x)) and count($x))
+    if( (!$x and !is_array($x)) or (!self::isAssoc($x) or !is_array($x)) and count($x))
       throw new TypeException('NO_OBJECT');
 
     $bufferData = [];
@@ -51,6 +51,14 @@ class TObject extends Type{
       $val($x);
 
     return $this;
+  }
+
+  function getDefinition(){
+    return $this->definition;
+  }
+
+  function deleteKey($key){
+    unset($this->definition[$key]);
   }
 }
 

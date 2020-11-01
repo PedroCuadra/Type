@@ -286,7 +286,7 @@ Valida una estructura de objeto. Es el tipo más versátil de todos.
 
 ### Uso típico
 
-En el siguiente ejemplo, un objeto con un `id` y un `name` de máximo 20 caracteres.
+En el siguiente ejemplo, un objeto con un `id` y un `name` de máximo 6 caracteres.
 
 ```php
 $params = new TObject([
@@ -319,7 +319,7 @@ $params->validate([
 $params->getData();
 ```
 
-### funcion de validación grupal
+### Funcion de validación grupal
 
 `TObject` tambien tiene una función de validación personalizada que se ejecuta luego que han evaluado todos los elementos individuales. Esta no necesita retornar un valor sino que debe lanzar `TypeException` si hay una condición que no satisfaga.
 
@@ -425,6 +425,156 @@ $tree->setStruct( new TObject([
   "name" => new TString(5),
   "children" => [ [], new TArray( $tree ) ]
 ]));
+```
+
+# Subconjuntos
+
+En alugnos casos es necesario extraer solo una parte de un validador `TObject`. 
+
+⚡ **CUIDADO** Esta sección asume que sabes como funcionan la mayoría de validadores, usar `TObject` y `TArray`. 
+
+✅ **GARANTÍA** `TSubObject` y `TSubArray` solo lanzan excepciones propias si están mal formados. 
+
+```php
+$schema = new TObject([
+  "foo" => new TObject([
+    "a" => new TInt,
+    "b" => new TInt
+  ]),
+  "bar" => new TObject([
+    "c" => new TInt,
+    "d" => new TInt
+  ]),
+  "baz" => new TObject([
+    "e" => new TString,
+    "f" => new TString
+  ]),
+  "hey" => new TArray(new TObject([
+    "g" => new TString,
+    "h" => new TString,
+    "i" => new TString,
+    "j" => new TString,
+  ])),
+  "boo" => new TArray([
+    new TObject([
+      "x" => new TDateTime,
+      "y" => new TDateTime,
+      "z" => new TFloat,
+    ]),
+    new TString
+  ])
+]);
+```
+
+## `class` TSubObject
+
+`TSubObject` Recorre la estructura de un `TObject` y permite la utilización de un subconjunto de claves. SOLO acepta `TObject` como argumento.
+
+```php
+$subSchemaA = new TSubObject($schema,$struct);
+
+// Donde $struct puede ser
+
+// incluye todo el validador 
+// Aunque no tiene sentido usarlo directamente
+$struct = true; 
+
+// incluye solo "foo" y "bar"
+$struct = "foo,bar";
+
+// excluye "foo" y "baz",
+// incluye solo "bar" y "hey" 
+$struct = "!foo,baz";
+
+// Si hay TObject anidados
+$struct = [
+  "foo" => true,  // incluye "foo"
+  "bar" => "c,d", // incluye "c" y "d"
+  "baz" => "!e,f,g"   // no incluye "e" ni "f" ni "g"
+  // no incluye "hey"
+];
+
+// Si hay TArray anidado
+$struct = [
+  "boo" => "!z;&t" // ver TSubArray Para más detalle
+];
+```
+
+## `class` TSubArray
+
+`TSubArray` escoge algunos de los validadores de un `TArray` y si algunos de los elementos es un `TObject` lo convierte a `TSubObject`.
+
+```php
+
+$schema = new TArray([
+  new TObject([
+    "x" => new TDateTime,
+    "y" => new TDateTime,
+    "z" => new TFloat,
+    "w" => new TObject([
+      "t" => new TString
+      "u" => new TString
+      "v" => new TString
+    ])
+  ]),
+  new TString,
+  new TArray([new TInt,new TEnum(["a","b","c"])])
+]);
+
+$sub = new TSubArray($schema,$options);
+```
+
+Donde `$options` puede ser un string de opciones para cada
+validador particular separado por punto y coma `;`.
+
+⚡ **CUIDADO** DEBEN Haber tantas opciones como validadores dentro del `TArray`.
+
+Valores posibles para cada opción:
+
+
+|valor|significado|
+|-|-|
+| `"&t"` | Usar validador dentro del array |
+| `"&f"` | No usar validador |
+| `<string vacío>` | No usar validador |
+| `<cualquier string>` | Asume opciones para `TObject` |
+---
+
+El uso de `$options` como string es limitado. Por eso, puede también ser un array indexado con los siguientes valores posibles.
+
+|valor|significado|
+|-|-|
+| `true` | Usar validador dentro del array |
+| `false` | No usar validador |
+| `<string>` | Asume opciones para `TObject` o `TArray` según corresponda |
+| `<array>`  | Asume opciones para `TObject` o `TArray` según corresponda |
+---
+
+Ejemplos de $options que pueden ser escritos como `string`:
+```php
+// incluye solo el validador de TString
+$options = "&f;&t";
+$options = [false,true];
+
+// incluye solo el validador de TObject 
+// pero sin incluir su parámetro x (ver detalles en TSubObject)
+$options = "!x;&f"; 
+$options = [ "!x", false];
+$options = [ [ "y"=>true, "z" =>true,"w"=>true ], false];
+```
+
+Los siguientes ejemplos no puede ser representado con $options como string
+```php
+$options [ 
+  [
+    "x"=> true,
+    "w"=> "t,u"
+  ],
+  true 
+];
+
+$options [ false, false, "&t;&f" ];
+$options [ false, false, [ true, false ]];
 ```
 
 # `interface` TypeEncodable

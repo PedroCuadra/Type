@@ -43,5 +43,9 @@ class TMany extends Type{
     return $this->default;
   }
 
+  function getTypes(){
+    return $this->types;
+  }
+  
 }
 ?>
