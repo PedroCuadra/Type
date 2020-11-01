@@ -6,16 +6,22 @@ class TRegex extends Type{
 
   private $regex;
   private $errorMessage;
+  private $returnMatchIndex;
 
-  function __construct($regex, $errorMessage = 'INVALID_REGEX'){
+  function __construct($regex, $errorMessage = 'INVALID_REGEX',$returnMatchIndex = null){
     $this->regex = $regex;
     $this->errorMessage = $errorMessage;
+    $this->returnMatchIndex = $returnMatchIndex;
   }
   
   function validate($x){
     if(is_string($x)){
       if ( preg_match($this->regex,$x,$match) ){
-        $this->validatedData = $match;
+        if($this->returnMatchIndex===null){
+          $this->validatedData = $match;
+        }else{
+          $this->validatedData = $match[$this->returnMatchIndex];
+        }
       } else {
         $this->validatedData = null;
         throw new TypeException($this->errorMessage);
